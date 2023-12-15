@@ -1,0 +1,13 @@
+node_modules
+dist
+
+.adminjs
+justfile
+.eslintrc.json
+.env
+.env.example
+README.md
+
+Dockerfile
+docker-compose.yml
+.dockerignore

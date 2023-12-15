@@ -1,0 +1,31 @@
+version: "3"
+services:
+  token-info-extractor-db:
+    image: postgres:15
+    container_name: 'token-info-extractor-postgres'
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+      POSTGRES_DB: 'token_info_extractor'
+
+  token-info-extractor:
+    build:
+      context: ../
+      dockerfile: token-info-extractor/Dockerfile
+    container_name: 'token-info-extractor'
+    restart: 'no'
+    depends_on:
+      - token-info-extractor-db
+    environment:
+      TOKEN_INFO_EXTRACTOR__CONTRACTS_INFO__URL: https://contracts-info-test.k8s-dev.blockscout.com
+      TOKEN_INFO_EXTRACTOR__CONTRACTS_INFO__API_KEY: ""
+      TOKEN_INFO_EXTRACTOR__DATABASE__URL: postgres://postgres:admin@token-info-extractor-db:5432/token_info_extractor
+      TOKEN_INFO_EXTRACTOR__DATABASE__RUN_MIGRATIONS: true
+      TOKEN_INFO_EXTRACTOR__TNS_EXTRACTOR__ENABLED: true
+      TOKEN_INFO_EXTRACTOR_TRUST_WALLET_EXTRACTOR__ENABLED: true
+    volumes:
+      - ./config/networks.json:/app/config/networks.json
+
+    entrypoint: /app/token-info-extractor

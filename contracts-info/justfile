@@ -1,0 +1,58 @@
+default:
+    just --list --unsorted
+
+db-host := env_var_or_default('DB_HOST', "localhost")
+db-port := env_var_or_default('DB_PORT', "10432")
+db-user := env_var_or_default('DB_USER', "postgres")
+db-password := env_var_or_default('DB_PASSWORD', "admin")
+db-name := env_var_or_default('DB_NAME', "contracts_info")
+export DATABASE_URL := "postgres://" + db-user + ":" + db-password + "@" + db-host + ":" + db-port + "/" + db-name
+
+docker-name := env_var_or_default('DOCKER_NAME', "contracts-info-postgres")
+test-db-port := env_var_or_default('TEST_DB_PORT', "10433")
+
+start-postgres:
+    # we run it in --rm mode, so all data will be deleted after stopping
+    docker run -p {{db-port}}:5432 --name {{docker-name}} -e POSTGRES_PASSWORD={{db-password}} -e POSTGRES_USER={{db-user}} --rm -d postgres
+    sleep 3
+    # wait for postgres to start, but only if db_name is not empty
+    $SHELL -c '[[ -z "{{db-name}}" ]] || docker exec -it {{docker-name}} psql -U postgres -c "create database {{db-name}};"'
+
+stop-postgres:
+    docker kill {{docker-name}}
+
+migrate-up:
+    sea-orm-cli migrate up -d contracts-info-migration
+
+migrate-down:
+    sea-orm-cli migrate down -d contracts-info-migration
+
+new-migration name:
+    sea-orm-cli migrate generate {{name}} -d contracts-info-migration
+
+generate-entities:
+    sea-orm-cli generate entity --lib -o contracts-info-entity/src
+
+test *args:
+    cargo test {{args}} -- --include-ignored
+
+test-with-db *args:
+    just db-port="{{test-db-port}}" db-name="" docker-name="{{docker-name}}-test" start-postgres
+    just db-port="{{test-db-port}}" db-name=""                                    test {{args}}
+    just                            docker-name="{{docker-name}}-test" stop-postgres
+
+
+
+insert-token-info:
+    docker exec -it {{docker-name}} psql -U {{db-user}} {{db-name}} -c "INSERT INTO token_infos (\
+    chain_id, address, \
+    project_name, project_website, project_email, \
+    icon_url, project_description, project_sector, docs, github, telegram, \
+    linkedin, discord, slack, twitter, open_sea, facebook, medium, reddit, support, \
+    coin_market_cap_ticker, coin_gecko_ticker, defi_llama_ticker) \
+    VALUES (5, '0x5b6b26997f4271ac0ca92c914cfbff0697fe1eaa', \
+    'LevToken' , \
+    'none', 'lymarenko.lev@gmail.com', 'https://example.com/url', 'My personal Token', 'DeFi', \
+    'docs', 'github', 'telegram', 'linkedin', \
+    'discord', 'slack', 'twitter' , 'openSea', 'facebook', 'medium', 'reddit', \
+    'support', '-', '-', '-')"

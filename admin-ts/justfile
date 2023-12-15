@@ -1,0 +1,30 @@
+
+export ADMIN_DATABASE_URL := "postgres://postgres:admin@localhost:9432/admin"
+export CONTRACTS_INFO_DATABASE_URL := "postgres://postgres:admin@localhost:10432/contracts_info"
+
+
+default:
+    just --list --unsorted
+
+start-postgres:
+    just -f ../admin-rs/justfile start-postgres
+    just -f ../contracts-info/justfile start-postgres
+
+
+stop-postgres:
+    just -f ../admin-rs/justfile stop-postgres
+    just -f ../contracts-info/justfile stop-postgres
+
+restart-postgres:
+    just stop-postgres || true
+    just start-postgres
+
+migrate-up:
+    just -f ../admin-rs/justfile DATABASE_URL={{ADMIN_DATABASE_URL}} migrate-up
+    just -f ../contracts-info/justfile DATABASE_URL={{CONTRACTS_INFO_DATABASE_URL}} migrate-up
+
+start:
+    # start postgres if not exists
+    just start-postgres || true
+    just migrate-up
+    yarn gstart

@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/contracts-info"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CONTRACTS_INFO_DATABASE_URL")
+}
+
+model VerifiedAddress {
+  id                BigInt   @id @default(autoincrement())
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  chain_id          BigInt
+  address           String   @db.VarChar(42)
+  owner_email       String   @db.VarChar
+  verified_manually Boolean  @default(false)
+  token_name        String?  @db.VarChar
+  token_symbol      String?  @db.VarChar
+
+  @@unique([chain_id, address], map: "unique_verified_addresses_chain_id_and_address_index")
+  @@map("verified_addresses")
+}
+
+model TokenInfo {
+  id                     BigInt   @id @default(autoincrement())
+  created_at             DateTime @default(now()) @db.Timestamp(6)
+  address                String   @db.VarChar
+  chain_id               BigInt
+  project_name           String?  @db.VarChar
+  project_website        String   @db.VarChar
+  project_email          String   @db.VarChar
+  icon_url               String   @db.VarChar
+  project_sector         String?  @db.VarChar
+  project_description    String   @db.VarChar
+  docs                   String?  @db.VarChar
+  github                 String?  @db.VarChar
+  telegram               String?  @db.VarChar
+  linkedin               String?  @db.VarChar
+  discord                String?  @db.VarChar
+  slack                  String?  @db.VarChar
+  twitter                String?  @db.VarChar
+  open_sea               String?  @db.VarChar
+  facebook               String?  @db.VarChar
+  medium                 String?  @db.VarChar
+  reddit                 String?  @db.VarChar
+  support                String?  @db.VarChar
+  coin_market_cap_ticker String?  @db.VarChar
+  coin_gecko_ticker      String?  @db.VarChar
+  defi_llama_ticker      String?  @db.VarChar
+  is_user_submitted      Boolean  @default(false)
+  token_name             String?  @db.VarChar
+  token_symbol           String?  @db.VarChar
+
+  @@unique([chain_id, address], map: "unique_token_infos_chain_id_and_address_index")
+  @@map("token_infos")
+}

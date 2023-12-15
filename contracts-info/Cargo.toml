@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "contracts-info-core",
+    "contracts-info-entity",
+    "contracts-info-migration",
+    "contracts-info-proto",
+    "contracts-info-server",
+    "token-info-extractor",
+    "token-info-extractor-entity",
+    "token-info-extractor-migration",
+]
+
+[patch.crates-io]
+blockscout-service-launcher = { git = "https://github.com/blockscout/blockscout-rs", rev = '641f7c724824e84b25a42a0cf5798cccf8d7094f' }

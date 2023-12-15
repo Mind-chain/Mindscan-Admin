@@ -1,0 +1,10 @@
+{
+  "networks": {
+    "5": {
+      "default_chain_name": "goerli"
+    },
+    "1": {
+      "default_chain_name": "ethereum"
+    }
+  }
+}

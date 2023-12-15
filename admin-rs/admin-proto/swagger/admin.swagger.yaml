@@ -1,0 +1,304 @@
+swagger: "2.0"
+info:
+  title: admin.proto
+  version: version not set
+tags:
+  - name: Admin
+  - name: Health
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/v1/chains/{chainId}/token-info-submissions:
+    get:
+      summary: |-
+        Returns a list of all token info submissions submitted by the user.
+        User must be authenticated and can get only those submissions, they submitted.
+      operationId: Admin_ListTokenInfoSubmissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1ListTokenInfoSubmissionsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: status
+          description: Filter by submission status.
+          in: query
+          required: false
+          type: string
+          enum:
+            - STATUS_UNKNOWN
+            - IN_PROCESS
+            - APPROVED
+            - REJECTED
+            - UPDATE_REQUIRED
+          default: STATUS_UNKNOWN
+      tags:
+        - Admin
+    post:
+      summary: |-
+        Creates a new token info submission.
+        Fails if any in process submission for the specified token already exists.
+        Fails if token ownership is not verified by the user.
+      operationId: Admin_CreateTokenInfoSubmission
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1TokenInfoSubmission'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: submission
+          description: The token info submission resource to create.
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/v1TokenInfoSubmission'
+      tags:
+        - Admin
+  /api/v1/chains/{chainId}/token-info-submissions/{id}:
+    get:
+      summary: Returns a specific token info submission.
+      operationId: Admin_GetTokenInfoSubmission
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1TokenInfoSubmission'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: id
+          description: The ID of the token info submission resource to retrieve.
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Admin
+    put:
+      summary: Modifies a token info submission.
+      operationId: Admin_UpdateTokenInfoSubmission
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1TokenInfoSubmission'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: id
+          description: |-
+            The ID of the token info submission resource to update.
+            Should correspond to the value inside `submission`.
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: submission
+          description: |-
+            The token info submission to update.
+
+            The token info submission's `id` field is used to identify the submission to update.
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/v1TokenInfoSubmission'
+      tags:
+        - Admin
+  /api/v1/chains/{chainId}/token-info-submissions/selectors:
+    get:
+      summary: Returns a list of selector values available for token info submission.
+      operationId: Admin_ListTokenInfoSubmissionSelectors
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1ListTokenInfoSubmissionSelectorsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Admin
+  /health:
+    get:
+      summary: |-
+        If the requested service is unknown, the call will fail with status
+        NOT_FOUND.
+      operationId: Health_Check
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1HealthCheckResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: service
+          in: query
+          required: false
+          type: string
+      tags:
+        - Health
+definitions:
+  HealthCheckResponseServingStatus:
+    type: string
+    enum:
+      - UNKNOWN
+      - SERVING
+      - NOT_SERVING
+      - SERVICE_UNKNOWN
+    default: UNKNOWN
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      details:
+        type: array
+        items:
+          $ref: '#/definitions/protobufAny'
+      message:
+        type: string
+  v1HealthCheckResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/HealthCheckResponseServingStatus'
+  v1ListTokenInfoSubmissionSelectorsResponse:
+    type: object
+    properties:
+      projectSectors:
+        type: array
+        items:
+          type: string
+        description: Project sectors.
+  v1ListTokenInfoSubmissionsResponse:
+    type: object
+    properties:
+      submissions:
+        type: array
+        items:
+          $ref: '#/definitions/v1TokenInfoSubmission'
+  v1TokenInfoSubmission:
+    type: object
+    properties:
+      adminComments:
+        type: string
+      coinGeckoTicker:
+        type: string
+      coinMarketCapTicker:
+        type: string
+      comment:
+        type: string
+      defiLlamaTicker:
+        type: string
+      discord:
+        type: string
+      docs:
+        type: string
+      facebook:
+        type: string
+      github:
+        type: string
+      iconUrl:
+        type: string
+      id:
+        type: string
+        format: uint64
+        description: A unique token info submission id.
+      linkedin:
+        type: string
+      medium:
+        type: string
+      openSea:
+        type: string
+      projectDescription:
+        type: string
+      projectEmail:
+        type: string
+      projectName:
+        type: string
+      projectSector:
+        type: string
+      projectWebsite:
+        type: string
+      reddit:
+        type: string
+      requesterEmail:
+        type: string
+      requesterName:
+        type: string
+      slack:
+        type: string
+      status:
+        $ref: '#/definitions/v1TokenInfoSubmissionStatus'
+        description: Output only field. Could not be updated by the user.
+      support:
+        type: string
+      telegram:
+        type: string
+      tokenAddress:
+        type: string
+        description: A token address a user submitted the info for.
+      twitter:
+        type: string
+      updatedAt:
+        type: string
+  v1TokenInfoSubmissionStatus:
+    type: string
+    enum:
+      - STATUS_UNKNOWN
+      - IN_PROCESS
+      - APPROVED
+      - REJECTED
+      - UPDATE_REQUIRED
+    default: STATUS_UNKNOWN

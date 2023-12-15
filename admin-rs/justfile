@@ -1,0 +1,68 @@
+default:
+    just --list --unsorted
+
+db-host := env_var_or_default('DB_HOST', "localhost")
+db-port := env_var_or_default('DB_PORT', "9432")
+db-user := env_var_or_default('DB_USER', "postgres")
+db-password := env_var_or_default('DB_PASSWORD', "admin")
+db-name := env_var_or_default('DB_NAME', "admin")
+export DATABASE_URL := "postgres://" + db-user + ":" + db-password + "@" + db-host + ":" + db-port + "/" + db-name
+
+docker-name := env_var_or_default('DOCKER_NAME', "admin-postgres")
+test-db-port := env_var_or_default('TEST_DB_PORT', "9433")
+
+start-postgres:
+    # we run it in --rm mode, so all data will be deleted after stopping
+    docker run -p {{db-port}}:5432 --name {{docker-name}} -e POSTGRES_PASSWORD={{db-password}} -e POSTGRES_USER={{db-user}} --rm -d postgres
+    sleep 3
+    # wait for postgres to start, but only if db_name is not empty
+    $SHELL -c '[[ -z "{{db-name}}" ]] || docker exec -it {{docker-name}} psql -U postgres -c "create database {{db-name}};"'
+
+stop-postgres:
+    docker kill {{docker-name}}
+
+migrate-up:
+    sea-orm-cli migrate up -d admin-migration
+
+migrate-down:
+    sea-orm-cli migrate down -d admin-migration
+
+new-migration name:
+    sea-orm-cli migrate generate {{name}} -d admin-migration
+
+generate-entities:
+    sea-orm-cli generate entity --lib -o admin-entity/src
+
+test:
+    cargo test -- --include-ignored
+
+test-with-db:
+    just db-port="{{test-db-port}}" db-name="" docker-name="{{docker-name}}-test" start-postgres
+    just db-port="{{test-db-port}}" db-name=""                                    test
+    just                            docker-name="{{docker-name}}-test" stop-postgres
+
+insert-superadmin:
+    docker exec -it {{docker-name}} psql -U {{db-user}} {{db-name}} -c "INSERT INTO users (email, password, is_superuser) \
+    VALUES ('admin@blockscout.com', '\$2b\$12\$4ylrCK084S1J99VQwJiSJeliSD3r04.WhM5B/zp1bHHPFqgfGQ1.S', true)"
+
+insert-submission:
+    docker exec -it {{docker-name}} psql -U {{db-user}} {{db-name}} -c "INSERT INTO submissions (\
+    chain_id, token_address, status, blockscout_user_email, \
+    requester_name, requester_email, project_name, project_website, project_email, \
+    icon_url, project_description, project_sector, comment, docs, github, telegram, \
+    linkedin, discord, slack, twitter, open_sea, facebook, medium, reddit, support, \
+    coin_market_cap_ticker, coin_gecko_ticker, defi_llama_ticker) \
+    VALUES (5, '0x5b6b26997f4271ac0ca92c914cfbff0697fe1eaa', 'in_process', \
+    'lymarenko.lev@gmail.com', 'Lymarenko Lev', 'lymarenko.lev@gmail.com', 'LevToken' , \
+    'none', 'lymarenko.lev@gmail.com', 'NULL', 'My personal Token', 'DeFi', \
+    'Its not actually a Erc20 contract...', 'docs', 'github', 'telegram', 'linkedin', \
+    'discord', 'slack', 'twitter' , 'openSea', 'facebook', 'medium', 'reddit', \
+    'support', '-', '-', '-')"
+
+insert-submissions n:
+    for file in {0..{{n}}}; do \
+        just insert-submission; \
+    done
+
+remove-submissions:
+    docker exec -it {{docker-name}} psql -U {{db-user}} {{db-name}} -c "DELETE FROM submissions WHERE blockscout_user_email = 'lymarenko.lev@gmail.com'"

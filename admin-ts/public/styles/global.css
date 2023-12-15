@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+* {
+  font-family: "Inter", sans-serif !important;
+}
+
+table[data-css="todoSubmissions-table"],
+table[data-css="allSubmissions-table"] {
+  table-layout: fixed;
+}
+
+/* bulk action checkbox */
+tr[data-css="todoSubmissions-table-head-row"] td:nth-child(1),
+tr[data-css="allSubmissions-table-head-row"] td:nth-child(1) {
+  width: 0;
+  padding: 0;
+}
+
+/* id column */
+tr[data-css="todoSubmissions-table-head-row"] td:nth-child(2),
+tr[data-css="allSubmissions-table-head-row"] td:nth-child(2) {
+  width: 60px;
+}
+
+/* chain_id column */
+tr[data-css="todoSubmissions-table-head-row"] td:nth-child(4),
+tr[data-css="allSubmissions-table-head-row"] td:nth-child(4) {
+  width: 50px;
+}
+
+/* status column */
+tr[data-css="todoSubmissions-table-head-row"] td:nth-child(6),
+tr[data-css="allSubmissions-table-head-row"] td:nth-child(6) {
+  width: 150px;
+}

@@ -1,0 +1,81 @@
+version: "3"
+services:
+  admin-db:
+    extends:
+      file: ./admin-rs/docker-compose-db.yml
+      service: admin-db
+    ports:
+      - "9432:5432"
+  admin-migration:
+    extends:
+      file: ./admin-rs/docker-compose-db.yml
+      service: admin-migration
+    depends_on:
+      - admin-db
+
+  contracts-info-db:
+    extends:
+      file: ./contracts-info/docker-compose-db.yml
+      service: contracts-info-db
+    ports:
+      - "10432:5432"
+  contracts-info-migration:
+    extends:
+      file: ./contracts-info/docker-compose-db.yml
+      service: contracts-info-migration
+    depends_on:
+      - contracts-info-db
+
+  admin-js:
+    build:
+      context: ./admin-ts
+    container_name: 'admin-js'
+    restart: "always"
+    depends_on:
+      - admin-db
+      - admin-migration
+      - contracts-info-db
+      - contracts-info-migration
+    environment:
+      - ADMIN_DATABASE_URL=postgres://postgres:admin@admin-db:5432/admin
+      - CONTRACTS_INFO_DATABASE_URL=postgres://postgres:admin@contracts-info-db:5432/contracts_info
+    ports:
+      - "8080:8080"
+
+  admin-server:
+    build:
+      context: ./admin-rs
+      dockerfile: ./admin-server/Dockerfile
+    container_name: 'admin-server'
+    restart: always
+    depends_on:
+      - admin-db
+      - admin-migration
+    ports:
+      - "8060:8050"
+    environment:
+      ADMIN_RS__CHAINS_CONFIG_PATH: /app/config/networks.json
+      ADMIN_RS__DATABASE__URL: postgres://postgres:admin@admin-db:5432/admin
+      ADMIN_RS__CONTRACTS_INFO_ADDR: http://contracts-info-server:8050
+      ADMIN_RS__DATABASE__RUN_MIGRATIONS: false
+    volumes:
+      - ./admin-rs/config/networks.json:/app/config/networks.json
+
+
+  contracts-info-server:
+    build:
+      context: ./contracts-info
+      dockerfile: ./contracts-info-server/Dockerfile
+    container_name: 'contracts-info-server'
+    restart: always
+    depends_on:
+      - contracts-info-db
+      - contracts-info-migration
+    ports:
+      - "8070:8050"
+    environment:
+      CONTRACTS_INFO__CHAINS_CONFIG_PATH: /app/config/networks.json
+      CONTRACTS_INFO__DATABASE__URL: postgres://postgres:admin@contracts-info-db:5432/contracts_info
+      CONTRACTS_INFO__DATABASE__RUN_MIGRATIONS: false
+    volumes:
+      - ./contracts-info/config/networks.json:/app/config/networks.json

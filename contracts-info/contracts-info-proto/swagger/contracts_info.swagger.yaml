@@ -1,0 +1,440 @@
+swagger: "2.0"
+info:
+  title: contracts_info.proto
+  version: version not set
+tags:
+  - name: ContractsInfo
+  - name: Health
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/v1/admin/token-infos:import:
+    post:
+      summary: |-
+        Adds a new token info into the database, if corresponding contract
+        does not have token info, or updates the existing token info.
+        Returns the newly added token info.
+        Only admin service must have the access to that method.
+      operationId: ContractsInfo_ImportTokenInfoAdmin
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1TokenInfo'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/v1ImportTokenInfoAdminRequest'
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/admin/verified-addresses/{address}/owner:
+    get:
+      summary: |-
+        Returns an owner of the contract given the contract address if the ownership has been verified.
+        Only admin service must have the access to that method.
+      operationId: ContractsInfo_GetVerifiedAddressOwnerAdmin
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1VerifiedAddressOwner'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: Id of the chain the contract is deployed at.
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: address
+          description: The address of the contract.
+          in: path
+          required: true
+          type: string
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/token-infos:
+    get:
+      summary: |-
+        Returns a list of all token infos submitted by the user.
+        User must be authenticated and can get only those token infos, they submitted.
+      operationId: ContractsInfo_ListUserTokenInfos
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1ListTokenInfosResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: |-
+            Id of the chain the user wants to list token infos from.
+            Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/token-infos/{tokenAddress}:
+    get:
+      summary: Returns a specific token info.
+      operationId: ContractsInfo_GetTokenInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1TokenInfo'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: |-
+            Id of the chain the user wants to get token info from.
+            Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: tokenAddress
+          description: The address of the token which token info resource to retrieve.
+          in: path
+          required: true
+          type: string
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/verified-addresses:
+    get:
+      summary: Returns a list of all addresses verified by the user. User must be authenticated.
+      operationId: ContractsInfo_ListUserVerifiedAddresses
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1ListUserVerifiedAddressesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: |-
+            Id of the chain the user wants to list verified addresses from.
+            Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/verified-addresses:prepare:
+    post:
+      summary: Validate and prepare address to being verified.
+      operationId: ContractsInfo_PrepareAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1PrepareAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: |-
+            Id of the chain the validation request is sent from.
+            Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              contractAddress:
+                type: string
+                title: Address of the contract being validated and prepared
+      tags:
+        - ContractsInfo
+  /api/v1/chains/{chainId}/verified-addresses:verify:
+    post:
+      summary: Verifies a new address, belonging to the user.
+      operationId: ContractsInfo_VerifyAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1VerifyAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainId
+          description: |-
+            Id of the chain the verification request is sent from.
+            Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              contractAddress:
+                type: string
+                title: Address of the contract being verified
+              message:
+                type: string
+                description: A message user signed.
+              signature:
+                type: string
+                title: Result of the user signing the message
+      tags:
+        - ContractsInfo
+  /health:
+    get:
+      summary: |-
+        If the requested service is unknown, the call will fail with status
+        NOT_FOUND.
+      operationId: Health_Check
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1HealthCheckResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: service
+          in: query
+          required: false
+          type: string
+      tags:
+        - Health
+definitions:
+  HealthCheckResponseServingStatus:
+    type: string
+    enum:
+      - UNKNOWN
+      - SERVING
+      - NOT_SERVING
+      - SERVICE_UNKNOWN
+    default: UNKNOWN
+  VerifyAddressResponseInvalidSignerError:
+    type: object
+    properties:
+      signer:
+        type: string
+      validAddresses:
+        type: array
+        items:
+          type: string
+  googlerpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      details:
+        type: array
+        items:
+          $ref: '#/definitions/protobufAny'
+      message:
+        type: string
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  v1AddressMetadata:
+    type: object
+    properties:
+      tokenName:
+        type: string
+      tokenSymbol:
+        type: string
+  v1HealthCheckResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/HealthCheckResponseServingStatus'
+  v1ImportTokenInfoAdminRequest:
+    type: object
+    properties:
+      tokenInfo:
+        $ref: '#/definitions/v1TokenInfo'
+        description: Token info to be imported.
+  v1ListTokenInfosResponse:
+    type: object
+    properties:
+      tokenInfos:
+        type: array
+        items:
+          $ref: '#/definitions/v1TokenInfo'
+  v1ListUserVerifiedAddressesResponse:
+    type: object
+    properties:
+      verifiedAddresses:
+        type: array
+        items:
+          $ref: '#/definitions/v1VerifiedAddress'
+  v1PrepareAddressResponse:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/v1PrepareAddressResponseSuccess'
+      status:
+        $ref: '#/definitions/v1PrepareAddressResponseStatus'
+  v1PrepareAddressResponseStatus:
+    type: string
+    enum:
+      - UNKNOWN_STATUS
+      - SUCCESS
+      - IS_OWNER_ERROR
+      - OWNERSHIP_VERIFIED_ERROR
+      - SOURCE_CODE_NOT_VERIFIED_ERROR
+      - INVALID_ADDRESS_ERROR
+    default: UNKNOWN_STATUS
+    description: |2-
+       - IS_OWNER_ERROR: User is already an owner of the address.
+       - OWNERSHIP_VERIFIED_ERROR: Address ownership has been verified by another account.
+       - SOURCE_CODE_NOT_VERIFIED_ERROR: Contract source code has not been verified.
+       - INVALID_ADDRESS_ERROR: Specified address either does not exist or is EOA.
+  v1PrepareAddressResponseSuccess:
+    type: object
+    properties:
+      contractCreator:
+        type: string
+        description: Address of the contract creator.
+      contractOwner:
+        type: string
+        description: (optional) Result of the owner() contract method call, if any.
+      signingMessage:
+        type: string
+        description: Message, the user have to sign for address verification.
+  v1TokenInfo:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: uint64
+        title: Id of the chain token info is located at
+      coinGeckoTicker:
+        type: string
+      coinMarketCapTicker:
+        type: string
+      defiLlamaTicker:
+        type: string
+      discord:
+        type: string
+      docs:
+        type: string
+      facebook:
+        type: string
+      github:
+        type: string
+      iconUrl:
+        type: string
+      linkedin:
+        type: string
+      medium:
+        type: string
+      openSea:
+        type: string
+      projectDescription:
+        type: string
+      projectEmail:
+        type: string
+      projectName:
+        type: string
+      projectSector:
+        type: string
+      projectWebsite:
+        type: string
+      reddit:
+        type: string
+      slack:
+        type: string
+      support:
+        type: string
+      telegram:
+        type: string
+      tokenAddress:
+        type: string
+        title: Ethereum address of the token the info corresponds to, as lowercase hex string
+      tokenName:
+        type: string
+      tokenSymbol:
+        type: string
+      twitter:
+        type: string
+  v1VerifiedAddress:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: uint64
+      contractAddress:
+        type: string
+      metadata:
+        $ref: '#/definitions/v1AddressMetadata'
+      userId:
+        type: string
+      verifiedDate:
+        type: string
+  v1VerifiedAddressOwner:
+    type: object
+    properties:
+      userEmail:
+        type: string
+        description: Id of the user who owns the contract.
+  v1VerifyAddressResponse:
+    type: object
+    properties:
+      invalidSigner:
+        $ref: '#/definitions/VerifyAddressResponseInvalidSignerError'
+      result:
+        $ref: '#/definitions/v1VerifyAddressResponseSuccess'
+      status:
+        $ref: '#/definitions/v1VerifyAddressResponseStatus'
+  v1VerifyAddressResponseStatus:
+    type: string
+    enum:
+      - UNKNOWN_STATUS
+      - SUCCESS
+      - VALIDITY_EXPIRED_ERROR
+      - INVALID_SIGNATURE_ERROR
+      - INVALID_SIGNER_ERROR
+    default: UNKNOWN_STATUS
+  v1VerifyAddressResponseSuccess:
+    type: object
+    properties:
+      verifiedAddress:
+        $ref: '#/definitions/v1VerifiedAddress'

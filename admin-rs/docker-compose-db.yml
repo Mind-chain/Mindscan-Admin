@@ -1,0 +1,22 @@
+version: "3"
+services:
+  admin-db:
+    image: postgres:15
+    container_name: 'admin-postgres'
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+      POSTGRES_DB: 'admin'
+
+  admin-migration:
+    build:
+      context: admin-migration
+    container_name: 'admin-migration'
+    restart: 'no'
+    depends_on:
+      - admin-db
+    environment:
+      DATABASE_URL: postgres://postgres:admin@admin-db:5432/admin
+    entrypoint: /app/admin-migration up

@@ -1,0 +1,22 @@
+version: "3"
+services:
+  contracts-info-db:
+    image: postgres:15
+    container_name: 'contracts-info-postgres'
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+      POSTGRES_DB: 'contracts_info'
+
+  contracts-info-migration:
+    build:
+      context: contracts-info-migration
+    container_name: 'contracts-info-migration'
+    restart: 'no'
+    depends_on:
+      - contracts-info-db
+    environment:
+      DATABASE_URL: postgres://postgres:admin@contracts-info-db:5432/contracts_info
+    entrypoint: /app/contracts-info-migration up

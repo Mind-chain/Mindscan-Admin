@@ -1,0 +1,39 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+      #################### Token infos ####################
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.GetTokenInfo
+      get: /api/v1/chains/{chain_id}/token-infos/{token_address}
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.ListUserTokenInfos
+      get: /api/v1/chains/{chain_id}/token-infos
+
+      #################### Verified addresses ####################
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.VerifyAddress
+      post: /api/v1/chains/{chain_id}/verified-addresses:verify
+      body: "*"
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.PrepareAddress
+      post: /api/v1/chains/{chain_id}/verified-addresses:prepare
+      body: "*"
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.ListUserVerifiedAddresses
+      get: /api/v1/chains/{chain_id}/verified-addresses
+
+      #################### Admin related functionality ####################
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.ImportTokenInfoAdmin
+      post: /api/v1/admin/token-infos:import
+      body: "*"
+
+    - selector: blockscout.contractsInfo.v1.ContractsInfo.GetVerifiedAddressOwnerAdmin
+      get: /api/v1/chains/{chain_id}/admin/verified-addresses/{address}/owner
+
+      #################### Health ####################
+
+    - selector: blockscout.contractsInfo.v1.Health.Check
+      get: /health

@@ -1,0 +1,24 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: blockscout.admin.v1.Admin.ListTokenInfoSubmissionSelectors
+      get: /api/v1/chains/{chain_id}/token-info-submissions/selectors
+
+    - selector: blockscout.admin.v1.Admin.CreateTokenInfoSubmission
+      post: /api/v1/chains/{chain_id}/token-info-submissions
+      body: "submission"
+
+    - selector: blockscout.admin.v1.Admin.GetTokenInfoSubmission
+      get: /api/v1/chains/{chain_id}/token-info-submissions/{id}
+
+    - selector: blockscout.admin.v1.Admin.UpdateTokenInfoSubmission
+      put: /api/v1/chains/{chain_id}/token-info-submissions/{id}
+      body: "submission"
+
+    - selector: blockscout.admin.v1.Admin.ListTokenInfoSubmissions
+      get: /api/v1/chains/{chain_id}/token-info-submissions
+
+    - selector: blockscout.admin.v1.Health.Check
+      get: /health

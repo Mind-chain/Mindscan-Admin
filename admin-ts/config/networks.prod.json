@@ -1,0 +1,12 @@
+{
+  "networks": {
+    "1": {
+      "url": "https://eth.blockscout.com/",
+      "label": "Mainnet"
+    },
+    "5": {
+      "url": "https://eth-goerli.blockscout.com/",
+      "label": "Goerli"
+    }
+  }
+}

@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package blockscout.admin.v1;
+
+option go_package = "github.com/blockscout/blockscout-admin/admin-rs";
+
+service Admin {
+  // Returns a list of selector values available for token info submission.
+  rpc ListTokenInfoSubmissionSelectors(ListTokenInfoSubmissionSelectorsRequest) returns (ListTokenInfoSubmissionSelectorsResponse) {}
+
+  // Creates a new token info submission.
+  // Fails if any in process submission for the specified token already exists.
+  // Fails if token ownership is not verified by the user.
+  rpc CreateTokenInfoSubmission(TokenInfoSubmissionRequest) returns (TokenInfoSubmission) {}
+
+  // Returns a specific token info submission.
+  rpc GetTokenInfoSubmission(GetTokenInfoSubmissionRequest) returns (TokenInfoSubmission) {}
+
+  // Modifies a token info submission.
+  rpc UpdateTokenInfoSubmission(UpdateTokenInfoSubmissionRequest) returns (TokenInfoSubmission) {}
+
+  // Returns a list of all token info submissions submitted by the user.
+  // User must be authenticated and can get only those submissions, they submitted.
+  rpc ListTokenInfoSubmissions(ListTokenInfoSubmissionsRequest) returns (ListTokenInfoSubmissionsResponse) {}
+}
+
+enum TokenInfoSubmissionStatus {
+  STATUS_UNKNOWN = 0;
+  IN_PROCESS = 1;
+  APPROVED = 2;
+  REJECTED = 3;
+  UPDATE_REQUIRED = 4;
+}
+
+message TokenInfoSubmission {
+  // A unique token info submission id.
+  uint64 id = 1;
+
+  // A token address a user submitted the info for.
+  string token_address = 2;
+
+  // Output only field. Could not be updated by the user.
+  TokenInfoSubmissionStatus status = 3;
+  string updated_at = 29;
+  optional string admin_comments = 30;
+
+  string requester_name = 4;
+  string requester_email = 5;
+  optional string project_name = 6;
+  string project_website = 7;
+  string project_email = 8;
+  string icon_url = 9;
+  string project_description = 10;
+  optional string project_sector = 11;
+  optional string comment = 12;
+  optional string docs = 13;
+  optional string github = 14;
+  optional string telegram = 15;
+  optional string linkedin = 16;
+  optional string discord = 17;
+  optional string slack = 18;
+  optional string twitter = 19;
+  optional string open_sea = 21;
+  optional string facebook = 22;
+  optional string medium = 23;
+  optional string reddit = 24;
+  optional string support = 25;
+  optional string coin_market_cap_ticker = 26;
+  optional string coin_gecko_ticker = 27;
+  optional string defi_llama_ticker = 28;
+
+  // Other parameters to be added later when finalized
+}
+
+message TokenInfoSubmissionRequest {
+  uint64 chain_id = 1;
+  // The token info submission resource to create.
+  TokenInfoSubmission submission = 2;
+}
+
+message GetTokenInfoSubmissionRequest {
+  // The ID of the token info submission resource to retrieve.
+  int64 id = 1;
+  uint64 chain_id = 2;
+}
+
+message UpdateTokenInfoSubmissionRequest {
+  // The ID of the token info submission resource to update.
+  // Should correspond to the value inside `submission`.
+  int64 id = 1;
+  uint64 chain_id = 2;
+  // The token info submission to update.
+  //
+  // The token info submission's `id` field is used to identify the submission to update.
+  TokenInfoSubmission submission = 3;
+}
+
+message ListTokenInfoSubmissionsRequest {
+  uint64 chain_id = 1;
+  // Filter by submission status.
+  TokenInfoSubmissionStatus status = 2;
+}
+
+message ListTokenInfoSubmissionsResponse {
+  repeated TokenInfoSubmission submissions = 1;
+}
+
+message ListTokenInfoSubmissionSelectorsRequest {
+  uint64 chain_id = 1;
+}
+
+message ListTokenInfoSubmissionSelectorsResponse {
+  // Project sectors.
+  repeated string project_sectors = 1;
+}

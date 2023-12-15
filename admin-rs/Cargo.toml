@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "admin-proto",
+    "admin-core",
+    "admin-migration",
+    "admin-entity",
+    "admin-server",
+]

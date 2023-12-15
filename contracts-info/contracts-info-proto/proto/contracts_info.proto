@@ -1,0 +1,206 @@
+syntax = "proto3";
+
+package blockscout.contractsInfo.v1;
+
+option go_package = "github.com/blockscout/blockscout-admin/contracts-info";
+
+service ContractsInfo {
+  // Returns a specific token info.
+  rpc GetTokenInfo(GetTokenInfoRequest) returns (TokenInfo) {}
+
+  // Returns a list of all token infos submitted by the user.
+  // User must be authenticated and can get only those token infos, they submitted.
+  rpc ListUserTokenInfos(ListUserTokenInfosRequest) returns (ListTokenInfosResponse) {}
+
+  // Verifies a new address, belonging to the user.
+  rpc VerifyAddress(VerifyAddressRequest) returns (VerifyAddressResponse) {}
+
+  // Validate and prepare address to being verified.
+  rpc PrepareAddress(PrepareAddressRequest) returns (PrepareAddressResponse) {}
+
+  // Returns a list of all addresses verified by the user. User must be authenticated.
+  rpc ListUserVerifiedAddresses(ListUserVerifiedAddressesRequest) returns (ListUserVerifiedAddressesResponse) {}
+
+  // Adds a new token info into the database, if corresponding contract
+  // does not have token info, or updates the existing token info.
+  // Returns the newly added token info.
+  // Only admin service must have the access to that method.
+  rpc ImportTokenInfoAdmin(ImportTokenInfoAdminRequest) returns (TokenInfo) {}
+
+  // Returns an owner of the contract given the contract address if the ownership has been verified.
+  // Only admin service must have the access to that method.
+  rpc GetVerifiedAddressOwnerAdmin(GetVerifiedAddressOwnerAdminRequest) returns (VerifiedAddressOwner) {}
+}
+
+/**********  Token Info Messages **********/
+
+message TokenInfo {
+  // Ethereum address of the token the info corresponds to, as lowercase hex string
+  string token_address = 1;
+
+  // Id of the chain token info is located at
+  uint64 chain_id = 2;
+
+  optional string project_name = 6;
+  string project_website = 7;
+  string project_email = 8;
+  string icon_url = 9;
+  string project_description = 10;
+  optional string project_sector = 11;
+  optional string docs = 13;
+  optional string github = 14;
+  optional string telegram = 15;
+  optional string linkedin = 16;
+  optional string discord = 17;
+  optional string slack = 18;
+  optional string twitter = 19;
+  optional string open_sea = 21;
+  optional string facebook = 22;
+  optional string medium = 23;
+  optional string reddit = 24;
+  optional string support = 25;
+  optional string coin_market_cap_ticker = 26;
+  optional string coin_gecko_ticker = 27;
+  optional string defi_llama_ticker = 28;
+  optional string token_name = 29;
+  optional string token_symbol = 30;
+}
+
+message GetTokenInfoRequest {
+  // The address of the token which token info resource to retrieve.
+  string token_address = 1;
+
+  // Id of the chain the user wants to get token info from.
+  // Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+  uint64 chain_id = 2;
+}
+
+message ListUserTokenInfosRequest {
+  // An user id whose token infos should be listed.
+  // The JWT token that corresponds to this user id must be provided via metadata.
+  // string user_id = 1;
+
+  // Id of the chain the user wants to list token infos from.
+  // Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+  uint64 chain_id = 1;
+}
+
+message ListTokenInfosResponse {
+  repeated TokenInfo token_infos = 1;
+}
+
+/**********  Verified Address Messages **********/
+
+message AddressMetadata {
+  optional string token_name = 1;
+  optional string token_symbol = 2;
+}
+
+message VerifiedAddress {
+  string user_id = 1;
+  uint64 chain_id = 2;
+  string contract_address = 3;
+  string verified_date = 4;
+  
+  AddressMetadata metadata = 5;
+}
+
+message VerifiedAddressOwner {
+  // Id of the user who owns the contract.
+  string user_email = 1;
+}
+
+message VerifyAddressRequest {
+  // Id of the chain the verification request is sent from.
+  // Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+  uint64 chain_id = 1;
+
+  // Address of the contract being verified
+  string contract_address = 2;
+  // A message user signed.
+  string message = 3;
+  // Result of the user signing the message
+  string signature = 4;
+}
+
+message VerifyAddressResponse {
+  enum Status {
+    UNKNOWN_STATUS = 0;
+    SUCCESS = 1;
+    VALIDITY_EXPIRED_ERROR = 2;
+    INVALID_SIGNATURE_ERROR = 3;
+    INVALID_SIGNER_ERROR = 4;
+  }
+  Status status = 1;
+
+  message Success {
+    VerifiedAddress verified_address = 1;
+  }
+  message InvalidSignerError {
+    string signer = 1;
+    repeated string valid_addresses = 2;
+  }
+  oneof details {
+    Success result = 2;
+    InvalidSignerError invalid_signer = 3;
+  }
+}
+
+message PrepareAddressRequest {
+  // Id of the chain the validation request is sent from.
+  // Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+  uint64 chain_id = 1;
+
+  // Address of the contract being validated and prepared
+  string contract_address = 2;
+}
+
+message PrepareAddressResponse {
+  enum Status {
+    UNKNOWN_STATUS = 0;
+    SUCCESS = 1;
+    // User is already an owner of the address.
+    IS_OWNER_ERROR = 3;
+    // Address ownership has been verified by another account.
+    OWNERSHIP_VERIFIED_ERROR = 2;
+    // Contract source code has not been verified.
+    SOURCE_CODE_NOT_VERIFIED_ERROR = 4;
+    // Specified address either does not exist or is EOA.
+    INVALID_ADDRESS_ERROR = 5;
+  }
+  Status status = 1;
+
+  message Success {
+    // Message, the user have to sign for address verification.
+    string signing_message = 1;
+    // Address of the contract creator.
+    string contract_creator = 2;
+    // (optional) Result of the owner() contract method call, if any.
+    optional string contract_owner = 3;
+  }
+  oneof details {
+    Success result = 2;
+  }
+}
+
+message ListUserVerifiedAddressesRequest {
+  // Id of the chain the user wants to list verified addresses from.
+  // Due to internal limitations must be not greater than 2^63-1 (9223372036854775807).
+  uint64 chain_id = 1;
+}
+
+message ListUserVerifiedAddressesResponse {
+  repeated VerifiedAddress verified_addresses = 1;
+}
+
+message GetVerifiedAddressOwnerAdminRequest {
+  // Id of the chain the contract is deployed at.
+  uint64 chain_id = 1;
+  // The address of the contract.
+  string address = 2;
+}
+
+message ImportTokenInfoAdminRequest {
+  // Token info to be imported.
+  TokenInfo token_info = 1;
+}
